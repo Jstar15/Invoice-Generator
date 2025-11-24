@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Professional Building Quote</title>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div id="quote">
+    <div class="header">
+      <img src="logo.png" alt="Company Logo">
+      <div class="company-info" contenteditable="true">
+        <strong>BGA Builders Ltd</strong><br>
+        123 Construction Lane<br>
+		Nottingham, NG5 3DR<br>
+        Phone: 01234 567890<br>
+        Email: bga.builders@hotmail.co.uk
+      </div>
+    </div>
+
+    <h1>BUILDING QUOTE</h1>
+    <p class="quote-no"><strong>Quote #:</strong> <span id="quoteNumber" contenteditable="true">Q2025-001</span></p>
+    <p class="quote-date"><strong>Date:</strong> <input type="date" id="quoteDate"></p>
+	
+    <p><strong>To:</strong> <span id="clientName" contenteditable="true">Lisa Waddell</span></p>
+    <p><span id="clientAddress" contenteditable="true">59 Gunthorpe Drive<br>Sherwood, NG5 3DT</span></p>
+
+
+    <h2>Scope of Works</h2>
+    <table>
+      <thead>
+        <tr><th>Item</th><th>Cost (GBP)</th></tr>
+      </thead>
+      <tbody id="scopeBody">
+        <tr>
+          <td contenteditable="true">Site preparation &amp; excavations</td>
+          <td contenteditable="true">£3,800.00</td>
+        </tr>
+        <tr>
+          <td contenteditable="true">Foundations &amp; concrete slab</td>
+          <td contenteditable="true">£2,400.00</td>
+        </tr>
+        <tr>
+          <td contenteditable="true">External walls &amp; cavity insulation</td>
+          <td contenteditable="true">£3,900.00</td>
+        </tr>
+        <tr>
+          <td contenteditable="true">Roof structure, waterproofing &amp; insulation</td>
+          <td contenteditable="true">£2,800.00</td>
+        </tr>
+        <tr>
+          <td contenteditable="true">Windows &amp; external doors supply &amp; fit</td>
+          <td contenteditable="true">£1,450.00</td>
+        </tr>
+        <tr>
+          <td contenteditable="true">Internal finishes (plaster, flooring)</td>
+          <td contenteditable="true">£1,567.00</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="totals">
+      <p><span class="label">Subtotal:</span> <span id="subtotal">£12,917.00</span></p>
+      <p><span class="label">VAT (20%):</span> <span id="vat">£2,583.40</span></p>
+      <p style="font-size:1.2rem; font-weight:600;">
+        <span class="label total">Total:</span> <span id="total">£15,500.40</span>
+      </p>
+    </div>
+
+    <div class="terms">
+      <p><strong>Payment Terms:</strong> <span contenteditable="true">60 Days from date of issue</span></p>
+      <p><strong>Quote Valid Until:</strong> <input type="date" id="validUntil"></p>
+    </div>
+
+    <div id="editControls">
+      <button id="addRow">Add Line</button>
+      <button id="removeRow">Remove Last Line</button>
+    </div>
+  </div>
+
+  <button id="printBtn" onclick="window.print()">Print / Save as PDF</button>
+
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      const quoteDateEl = document.getElementById('quoteDate');
+      const validUntilEl = document.getElementById('validUntil');
+
+      function parseCost(text) {
+        return parseFloat(text.replace(/[^0-9.]/g,''))||0;
+      }
+      function updateTotals() {
+        let sum = 0;
+        document.querySelectorAll('#scopeBody tr').forEach(r => {
+          sum += parseCost(r.cells[1].innerText);
+        });
+        document.getElementById('subtotal').innerText = '£' + sum.toFixed(2);
+        const vat = sum * 0.2;
+        document.getElementById('vat').innerText = '£' + vat.toFixed(2);
+        document.getElementById('total').innerText = '£' + (sum + vat).toFixed(2);
+      }
+      function updateValidUntil() {
+        const qd = quoteDateEl.value;
+        if (!qd) return;
+        const d = new Date(qd);
+        d.setDate(d.getDate() + 60);
+        validUntilEl.value = d.toISOString().substr(0,10);
+      }
+
+      // set default quote date to today
+      const today = new Date().toISOString().substr(0,10);
+      quoteDateEl.value = today;
+      // wire up change
+      quoteDateEl.addEventListener('change', updateValidUntil);
+      document.getElementById('addRow').addEventListener('click', () => {
+        // add new row
+        const tbody = document.getElementById('scopeBody');
+        const tr = document.createElement('tr');
+        tr.innerHTML = '<td contenteditable="true">New item</td><td contenteditable="true">£0.00</td>';
+        tbody.appendChild(tr);
+        tr.querySelectorAll('[contenteditable]').forEach(c => c.addEventListener('blur', updateTotals));
+        // re-run totals and expiry update
+        updateTotals();
+        updateValidUntil();
+      });
+      document.getElementById('removeRow').addEventListener('click', () => {
+        // remove last row
+        const tbody = document.getElementById('scopeBody');
+        if (tbody.lastElementChild) tbody.removeChild(tbody.lastElementChild);
+        // re-run totals and expiry update
+        updateTotals();
+        updateValidUntil();
+      });
+      document.querySelectorAll('#scopeBody td[contenteditable]').forEach(c=>c.addEventListener('blur', updateTotals));
+
+      updateTotals();
+      updateValidUntil();
+    });
+  </script>
+</body>
+</html>
